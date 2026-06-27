@@ -1,0 +1,161 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  password      String
+  name          String
+  avatarUrl     String?
+  role          String          @default("STUDENT") // "STUDENT" | "EDUCATOR" | "ADMIN"
+  status        String          @default("ACTIVE")  // "ACTIVE" | "SUSPENDED"
+  institutionId String?
+  institution   Institution?    @relation(fields: [institutionId], references: [id])
+  xp            Int             @default(0)
+  level         Int             @default(1)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  
+  // Relations
+  classMembers  ClassMember[]
+  classesLed    Class[]
+  progress      QuestProgress[]
+  badges        UserBadge[]
+  assignments   Assignment[]
+  refreshTokens RefreshToken[]
+}
+
+model Institution {
+  id               String          @id @default(uuid())
+  name             String          @unique
+  type             String          // "UNIVERSITY" | "HIGH_SCHOOL" | "VOCATIONAL" | "CORPORATE"
+  licenseType      String          @default("FREE") // "FREE" | "BASIC" | "PREMIUM"
+  licenseExpiresAt DateTime?
+  maxStudents      Int             @default(50)
+  logoUrl          String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  
+  // Relations
+  users            User[]
+  classes          Class[]
+}
+
+model Class {
+  id            String        @id @default(uuid())
+  name          String
+  educatorId    String
+  educator      User          @relation(fields: [educatorId], references: [id])
+  institutionId String
+  institution   Institution   @relation(fields: [institutionId], references: [id])
+  inviteCode    String        @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Relations
+  members       ClassMember[]
+  assignments   Assignment[]
+}
+
+model ClassMember {
+  id        String   @id @default(uuid())
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime @default(now())
+
+  @@unique([classId, studentId])
+}
+
+model Quest {
+  id                  String          @id @default(uuid())
+  title               String
+  description         String
+  topic               String          // "CURRENT" | "VOLTAGE" | "RESISTANCE" | "OHM_LAW" | "LOGIC_GATE" | "TRANSISTOR" | "CAPACITOR" | "MIXED"
+  difficulty          String          // "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
+  xpReward            Int
+  prerequisiteQuestId String?
+  prerequisiteQuest   Quest?          @relation("QuestPrerequisites", fields: [prerequisiteQuestId], references: [id])
+  prereqQuests        Quest[]         @relation("QuestPrerequisites")
+  circuitConfig       String          // JSON string containing target components, layout, and sensor thresholds
+  instructions        String          // JSON string array of steps
+  hint                String?
+  isPremium           Boolean         @default(false)
+  orderIndex          Int
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  
+  // Relations
+  progress            QuestProgress[]
+  assignments         Assignment[]
+}
+
+model QuestProgress {
+  id                 String      @id @default(uuid())
+  studentId          String
+  student            User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  questId            String
+  quest              Quest       @relation(fields: [questId], references: [id], onDelete: Cascade)
+  status             String      @default("NOT_STARTED") // "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "FAILED"
+  attempts           Int         @default(0)
+  completedAt        DateTime?
+  timeSpentSeconds   Int         @default(0)
+  sensorDataSnapshot String?     // JSON string of sensor readings at completion
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  @@unique([studentId, questId])
+}
+
+model Badge {
+  id            String       @id @default(uuid())
+  name          String       @unique
+  description   String
+  iconUrl       String
+  criteriaType  String       // "QUEST_COUNT" | "TOPIC_MASTERY" | "STREAK" | "SPEED" | "SPECIAL"
+  criteriaValue String       // JSON string defining threshold (e.g. {"count": 10})
+  createdAt     DateTime     @default(now())
+  
+  // Relations
+  users         UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  earnedAt  DateTime @default(now())
+
+  @@unique([userId, badgeId])
+}
+
+model Assignment {
+  id         String   @id @default(uuid())
+  classId    String
+  class      Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  questId    String
+  quest      Quest    @relation(fields: [questId], references: [id], onDelete: Cascade)
+  educatorId String
+  educator   User     @relation(fields: [educatorId], references: [id], onDelete: Cascade)
+  deadline   DateTime
+  createdAt  DateTime @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

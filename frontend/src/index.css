@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+
+:root {
+  --bg-primary: #F7F7F5;
+  --bg-secondary: #F3F2EF;
+  --bg-card: #FCFCFB;
+  --border-glass: #E7E7E4;
+  --border-focus: #000000;
+  --text-primary: #111111;
+  --text-secondary: #6B6B6B;
+  --primary: #000000;
+  --cyan: #00a29a;
+  --cyan-neon: #00a29a;
+  --red-neon: #ba1a1a;
+  --gold: #d97706;
+  --silver: #4b5563;
+  --bronze: #b45309;
+  --font-heading: 'Montserrat', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'Fira Code', monospace;
+  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Glassmorphism/Tactile Card utility - Auralis Clean Style */
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  padding: 24px;
+  transition: var(--transition-smooth);
+}
+
+.glass-card:hover {
+  border-color: #747878;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
+}
+
+/* Glow effects */
+.glow-text-cyan {
+  color: var(--cyan);
+  text-shadow: 0 0 8px rgba(0, 162, 154, 0.1);
+}
+
+.glow-border-cyan {
+  border-color: var(--cyan);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-glass);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #747878;
+}
+
+/* Micro-animations */
+@keyframes flow {
+  from {
+    stroke-dashoffset: 20;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+.pulse-element {
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+/* Common form inputs styling */
+input, select, textarea {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-family: var(--font-body);
+  transition: var(--transition-smooth);
+  width: 100%;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 1px var(--border-focus);
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 12px 24px;
+  transition: var(--transition-smooth);
+  border: none;
+}
+
+.btn-primary {
+  background: #000000;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid #747878;
+}
+
+.btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
