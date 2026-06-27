@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore';
-import { BookOpen, Clock, Play, BarChart2, Award, Zap, ChevronRight, Compass, Lightbulb, RefreshCw } from 'lucide-react';
+import { BookOpen, Clock, Play, BarChart2, Award, Zap, ChevronRight, Compass, Lightbulb, RefreshCw, Lock, Check, X } from 'lucide-react';
 
 interface Quest {
   id: string;
@@ -21,8 +21,11 @@ interface Quest {
 export const Dashboard: React.FC = () => {
   const [quests, setQuests] = useState<Quest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
+  
   const user = useAppStore(state => state.user);
   const token = useAppStore(state => state.accessToken);
+  const logout = useAppStore(state => state.logout);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,9 +41,18 @@ export const Dashboard: React.FC = () => {
             'Authorization': `Bearer ${token}`
           }
         });
+        
+        if (response.status === 401) {
+          logout();
+          navigate('/login');
+          return;
+        }
+
         const data = await response.json();
         if (response.ok) {
-          setQuests(data.quests);
+          // Sort quests by orderIndex to keep path chronological
+          const sortedQuests = data.quests.sort((a: Quest, b: Quest) => a.orderIndex - b.orderIndex);
+          setQuests(sortedQuests);
         }
       } catch (error) {
         console.error('Failed to fetch quests:', error);
@@ -72,35 +84,48 @@ export const Dashboard: React.FC = () => {
   const xpInCurrentLevel = currentXP % nextLevelXP;
   const progressPercent = Math.min((xpInCurrentLevel / nextLevelXP) * 100, 100);
 
-  const nextQuest = quests.find(q => q.progress.status !== 'COMPLETED');
+  // Find node coordinates
+  // Nodes will alternate horizontally: left: 30%, 70%, 30%, 70%...
+  const nodePositions = quests.map((q, idx) => {
+    const x = idx % 2 === 0 ? 30 : 70;
+    const y = 80 + idx * 160;
+    return { x, y, quest: q };
+  });
+
+  // Build SVG path coordinate strings
+  const pathD = nodePositions.map((node, idx) => (idx === 0 ? `M ${node.x}% ${node.y}` : `L ${node.x}% ${node.y}`)).join(' ');
+
+  // Active path traces up to the active (first uncompleted) quest
+  const activeNodes = [];
+  for (let i = 0; i < nodePositions.length; i++) {
+    activeNodes.push(nodePositions[i]);
+    if (nodePositions[i].quest.progress.status !== 'COMPLETED') {
+      break;
+    }
+  }
+  const activePathD = activeNodes.map((node, idx) => (idx === 0 ? `M ${node.x}% ${node.y}` : `L ${node.x}% ${node.y}`)).join(' ');
+
+  // Find details of currently selected node position
+  const selectedNodePos = nodePositions.find(n => n.quest.id === selectedQuest?.id);
 
   return (
-    <div style={{ position: 'relative', minHeight: '90vh', overflow: 'hidden' }}>
-      {/* Dynamic Background Glow Effect */}
+    <div style={{ position: 'relative', minHeight: '90vh', overflow: 'hidden', paddingBottom: '80px' }}>
+      
+      {/* Dynamic Ambient Background Glows */}
       <div style={{
         position: 'absolute',
-        top: '-10%',
-        right: '5%',
+        top: '-5%',
+        right: '10%',
         width: '500px',
         height: '500px',
-        background: 'radial-gradient(circle, rgba(0, 162, 154, 0.05) 0%, rgba(0,0,0,0) 70%)',
+        background: 'radial-gradient(circle, rgba(0, 162, 154, 0.04) 0%, rgba(0,0,0,0) 70%)',
         zIndex: 0,
         pointerEvents: 'none'
       }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '10%',
-        left: '-5%',
-        width: '400px',
-        height: '400px',
-        background: 'radial-gradient(circle, rgba(0, 162, 154, 0.03) 0%, rgba(0,0,0,0) 70%)',
-        zIndex: 0,
-        pointerEvents: 'none'
-      }} />
-
+      
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px', position: 'relative', zIndex: 1 }}>
         
-        {/* Header Profile Summary (Asymmetric Glassmorphic Widget) */}
+        {/* Profile Card Header (Clean & Minimalist, No Glowing green box shadow) */}
         <div className="glass-card" style={{ 
           display: 'grid', 
           gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1.2fr)', 
@@ -112,43 +137,41 @@ export const Dashboard: React.FC = () => {
           backdropFilter: 'blur(20px)',
           borderRadius: '24px',
           border: '1px solid rgba(255, 255, 255, 0.6)',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.03)',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.02)',
         }}>
-          {/* Profile details */}
+          {/* Left details */}
           <div style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ position: 'relative' }}>
-              <div style={{
-                width: '88px',
-                height: '88px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, var(--cyan) 0%, #00d2c4 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '36px',
-                fontWeight: '800',
-                color: 'white',
-                boxShadow: '0 8px 24px rgba(0, 162, 154, 0.35)',
-                fontFamily: 'var(--font-heading)'
-              }}>
-                {user?.name.charAt(0).toUpperCase()}
-              </div>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, var(--cyan) 0%, #00d2c4 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '32px',
+              fontWeight: '800',
+              color: 'white',
+              boxShadow: '0 8px 20px rgba(0, 162, 154, 0.25)',
+              fontFamily: 'var(--font-heading)'
+            }}>
+              {user?.name.charAt(0).toUpperCase()}
             </div>
 
             <div style={{ flex: 1 }}>
-              <span style={{ fontSize: '11px', color: 'var(--cyan-neon)', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
                 WELCOME BACK, ARCHITECT
               </span>
-              <h1 style={{ fontSize: '32px', fontWeight: '800', letterSpacing: '-0.03em', margin: '4px 0 8px', color: 'var(--text-primary)' }}>
+              <h1 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.02em', margin: '4px 0 6px', color: 'var(--text-primary)' }}>
                 {user?.name}
               </h1>
               <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5' }}>
-                Kumpulkan <strong style={{ color: 'var(--text-primary)' }}>{currentXP} XP</strong> di platform dan selesaikan tantangan untuk meraih predikat jawara kelas!
+                Level up sirkuit Anda! Selesaikan tantangan phygital berikutnya untuk meraih badge berharga.
               </p>
             </div>
           </div>
 
-          {/* Level Tracker Ring */}
+          {/* Right level ring */}
           <div style={{ 
             display: 'flex', 
             gap: '24px', 
@@ -159,7 +182,7 @@ export const Dashboard: React.FC = () => {
           }}>
             <div style={{ textAlign: 'right' }}>
               <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', letterSpacing: '0.05em' }}>PROGRES LEVEL</span>
-              <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
+              <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
                 {xpInCurrentLevel} / {nextLevelXP} <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 'normal' }}>XP</span>
               </div>
               <div style={{ fontSize: '12px', color: 'var(--cyan-neon)', fontWeight: '600', marginTop: '2px' }}>
@@ -168,13 +191,13 @@ export const Dashboard: React.FC = () => {
             </div>
             
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="100" height="100" viewBox="0 0 100 100">
+              <svg width="84" height="84" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(0,0,0,0.03)" strokeWidth="6"/>
-                <circle cx="50" cy="50" r="40" fill="none" stroke="url(#progress-gradient)" strokeWidth="6"
+                <circle cx="50" cy="50" r="40" fill="none" stroke="url(#progress-grad)" strokeWidth="6"
                         strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * progressPercent / 100)}
-                        strokeLinecap="round" transform="rotate(-90 50 50)" style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1)', filter: 'drop-shadow(0 0 4px rgba(0, 162, 154, 0.4))' }}/>
+                        strokeLinecap="round" transform="rotate(-90 50 50)" style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
                 <defs>
-                  <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <linearGradient id="progress-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="var(--cyan)" />
                     <stop offset="100%" stopColor="#00d2c4" />
                   </linearGradient>
@@ -186,298 +209,349 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Summary Cards (Interactive Glassmorphic modules) */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '48px' }}>
+        {/* Asymmetric Content Layout */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '40px', alignItems: 'start' }}>
           
-          {/* Card 1 */}
+          {/* LEFT: Gamified Roadmap Path (Skill Tree) */}
           <div className="glass-card" style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            padding: '24px',
-            background: 'rgba(252, 252, 251, 0.8)',
-            borderRadius: '16px',
-            transition: 'var(--transition-smooth)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
-            e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 162, 154, 0.1)';
-            e.currentTarget.style.borderColor = 'var(--cyan)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = 'none';
-            e.currentTarget.style.borderColor = 'var(--border-glass)';
+            padding: '40px 24px',
+            background: 'rgba(252, 252, 251, 0.65)',
+            borderRadius: '24px',
+            position: 'relative'
           }}>
-            <div>
-              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', letterSpacing: '0.05em' }}>QUEST SELESAI</span>
-              <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '8px', fontFamily: 'var(--font-heading)' }}>
-                {completedCount} <span style={{ fontSize: '16px', color: 'var(--text-secondary)', fontWeight: '500' }}>/ {totalCount}</span>
-              </div>
-            </div>
-            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(0, 162, 154, 0.08)', color: 'var(--cyan-neon)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0, 162, 154, 0.05)' }}>
-              <BookOpen size={22} />
-            </div>
-          </div>
-
-          {/* Card 2 */}
-          <div className="glass-card" style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            padding: '24px',
-            background: 'rgba(252, 252, 251, 0.8)',
-            borderRadius: '16px',
-            transition: 'var(--transition-smooth)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
-            e.currentTarget.style.boxShadow = '0 12px 30px rgba(217, 119, 6, 0.1)';
-            e.currentTarget.style.borderColor = 'var(--gold)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = 'none';
-            e.currentTarget.style.borderColor = 'var(--border-glass)';
-          }}>
-            <div>
-              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', letterSpacing: '0.05em' }}>STREAK BELAJAR</span>
-              <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '8px', fontFamily: 'var(--font-heading)' }}>
-                12 <span style={{ fontSize: '16px', color: 'var(--text-secondary)', fontWeight: '500' }}>Hari</span>
-              </div>
-            </div>
-            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(217, 119, 6, 0.08)', color: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(217, 119, 6, 0.05)' }}>
-              <Zap size={22} fill="var(--gold)" />
-            </div>
-          </div>
-
-          {/* Card 3 */}
-          <div className="glass-card" style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            padding: '24px',
-            background: 'rgba(252, 252, 251, 0.8)',
-            borderRadius: '16px',
-            transition: 'var(--transition-smooth)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
-            e.currentTarget.style.boxShadow = '0 12px 30px rgba(124, 58, 237, 0.1)';
-            e.currentTarget.style.borderColor = '#7c3aed';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = 'none';
-            e.currentTarget.style.borderColor = 'var(--border-glass)';
-          }}>
-            <div>
-              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', letterSpacing: '0.05em' }}>BADGE DIRENTAK</span>
-              <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '8px', fontFamily: 'var(--font-heading)' }}>
-                15 <span style={{ fontSize: '16px', color: 'var(--text-secondary)', fontWeight: '500' }}>Lencana</span>
-              </div>
-            </div>
-            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(124, 58, 237, 0.08)', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(124, 58, 237, 0.05)' }}>
-              <Award size={22} />
-            </div>
-          </div>
-
-        </div>
-
-        {/* Main Content Grid (Asymmetric layout) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.7fr 1fr', gap: '36px', alignItems: 'start' }}>
-          
-          {/* Left Column: Challenge Library */}
-          <div>
-            <h2 style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '-0.02em', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
-              <Compass size={24} color="var(--cyan)" /> Library Tantangan Sirkuit
+            <h2 style={{ fontSize: '22px', fontWeight: '800', letterSpacing: '-0.02em', marginBottom: '40px', textAlign: 'center', color: 'var(--text-primary)' }}>
+              Peta Jalan Sirkuit Phygital
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {quests.map((quest) => {
+            {/* Tree Path Container */}
+            <div style={{ 
+              position: 'relative', 
+              width: '100%', 
+              height: `${quests.length * 160 + 80}px`,
+              margin: '0 auto'
+            }}>
+              {/* SVG connection lines with flow indicator */}
+              <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'visible' }}>
+                {quests.length > 1 && (
+                  <>
+                    {/* Inactive track */}
+                    <path d={pathD} fill="none" stroke="rgba(0, 0, 0, 0.08)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                    {/* Active flowing track */}
+                    <path d={activePathD} fill="none" stroke="var(--cyan)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="12 12" className="animate-electron-flow" style={{ filter: 'drop-shadow(0 0 3px rgba(0, 162, 154, 0.4))' }} />
+                  </>
+                )}
+              </svg>
+
+              {/* Quest Nodes */}
+              {nodePositions.map((node, idx) => {
+                const quest = node.quest;
                 const isCompleted = quest.progress.status === 'COMPLETED';
                 const isLocked = quest.orderIndex > 1 && quests.find(q => q.orderIndex === quest.orderIndex - 1)?.progress.status !== 'COMPLETED';
+                const isActive = !isCompleted && !isLocked;
+
+                // Pick theme based on difficulty
+                let colorGradients = 'linear-gradient(135deg, #a1a1aa 0%, #71717a 100%)'; // locked
+                let nodeBorder = '3px solid rgba(255,255,255,0.8)';
+                let iconColor = '#ffffff';
+
+                if (isCompleted) {
+                  colorGradients = 'linear-gradient(135deg, #00bcac 0%, #00968b 100%)';
+                  nodeBorder = '3px solid rgba(255,255,255,0.8)';
+                } else if (isActive) {
+                  if (quest.difficulty === 'BEGINNER') {
+                    colorGradients = 'linear-gradient(135deg, var(--cyan) 0%, #00d2c4 100%)';
+                  } else if (quest.difficulty === 'INTERMEDIATE') {
+                    colorGradients = 'linear-gradient(135deg, var(--gold) 0%, #f59e0b 100%)';
+                  } else {
+                    colorGradients = 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)';
+                  }
+                  nodeBorder = '3px solid var(--text-primary)';
+                }
 
                 return (
                   <div 
-                    key={quest.id} 
-                    className="glass-card" 
-                    style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      flexWrap: 'wrap',
-                      gap: '24px',
-                      padding: '28px',
-                      opacity: isLocked ? 0.55 : 1,
-                      pointerEvents: isLocked ? 'none' : 'auto',
-                      background: isCompleted ? 'rgba(252, 252, 251, 0.6)' : 'rgba(252, 252, 251, 0.85)',
-                      borderLeft: isCompleted ? '5px solid #00bcac' : (isLocked ? '5px solid #747878' : '5px solid var(--cyan-neon)'),
-                      boxShadow: isCompleted ? 'none' : '0 4px 20px rgba(0,0,0,0.01)',
-                      transition: 'var(--transition-smooth)',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isLocked) {
-                        e.currentTarget.style.transform = 'translateX(4px)';
-                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 162, 154, 0.05)';
-                        e.currentTarget.style.borderColor = isCompleted ? '#00bcac' : 'var(--cyan)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isLocked) {
-                        e.currentTarget.style.transform = 'none';
-                        e.currentTarget.style.boxShadow = isCompleted ? 'none' : '0 4px 20px rgba(0,0,0,0.01)';
-                        e.currentTarget.style.borderColor = isCompleted ? '#00bcac' : 'var(--cyan-neon)';
-                      }
+                    key={quest.id}
+                    style={{
+                      position: 'absolute',
+                      left: `${node.x}%`,
+                      top: `${node.y}px`,
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 3,
                     }}
                   >
-                    <div style={{ flex: '1', minWidth: '240px' }}>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '10px' }}>
-                        <span style={{
-                          fontSize: '10px',
-                          fontWeight: '800',
-                          letterSpacing: '0.05em',
-                          padding: '4px 10px',
-                          borderRadius: '30px',
-                          background: quest.difficulty === 'BEGINNER' ? 'rgba(0,162,154,0.1)' : (quest.difficulty === 'INTERMEDIATE' ? 'rgba(217,119,6,0.1)' : 'rgba(186,26,26,0.1)'),
-                          color: quest.difficulty === 'BEGINNER' ? 'var(--cyan-neon)' : (quest.difficulty === 'INTERMEDIATE' ? 'var(--gold)' : 'var(--red-neon)')
-                        }}>
-                          {quest.difficulty}
-                        </span>
-                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>• {quest.topic.replace('_', ' ')}</span>
-                      </div>
-
-                      <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.01em' }}>
-                        {quest.title}
-                      </h3>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5' }}>
-                        {quest.description}
-                      </p>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexShrink: 0 }}>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{ color: 'var(--cyan-neon)', fontWeight: '800', fontSize: '15px', fontFamily: 'var(--font-mono)' }}>+{quest.xpReward} XP</span>
-                      </div>
-
+                    <button 
+                      onClick={() => setSelectedQuest(selectedQuest?.id === quest.id ? null : quest)}
+                      style={{
+                        width: isActive ? '72px' : '64px',
+                        height: isActive ? '72px' : '64px',
+                        borderRadius: '50%',
+                        background: colorGradients,
+                        border: nodeBorder,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        padding: 0,
+                        boxShadow: isActive 
+                          ? '0 10px 20px rgba(0, 162, 154, 0.25)' 
+                          : '0 4px 12px rgba(0,0,0,0.06)',
+                        transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s',
+                        zIndex: 4,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.1)';
+                        if (isActive) {
+                          e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 162, 154, 0.4)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'none';
+                        e.currentTarget.style.boxShadow = isActive 
+                          ? '0 10px 20px rgba(0, 162, 154, 0.25)' 
+                          : '0 4px 12px rgba(0,0,0,0.06)';
+                      }}
+                    >
                       {isCompleted ? (
-                        <span style={{
-                          background: 'rgba(0, 188, 172, 0.08)',
-                          color: '#00bcac',
-                          padding: '12px 24px',
-                          borderRadius: '10px',
-                          fontWeight: '700',
-                          fontSize: '13px',
-                          border: '1px solid rgba(0, 188, 172, 0.2)',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}>
-                          Selesai
-                        </span>
+                        <Check size={26} color={iconColor} strokeWidth={3} />
                       ) : isLocked ? (
-                        <span style={{
-                          background: 'rgba(0,0,0,0.02)',
-                          color: 'var(--text-secondary)',
-                          padding: '12px 24px',
-                          borderRadius: '10px',
-                          fontWeight: '700',
-                          fontSize: '13px',
-                          border: '1px solid var(--border-glass)'
-                        }}>
-                          Terkunci
-                        </span>
+                        <Lock size={22} color="rgba(255,255,255,0.7)" />
                       ) : (
-                        <Link to={`/lab/${quest.id}`} className="btn-primary" style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '8px', 
-                          fontSize: '13px',
-                          padding: '12px 24px',
-                          borderRadius: '10px',
-                          boxShadow: '0 4px 12px rgba(0, 162, 154, 0.25)',
-                          background: 'linear-gradient(135deg, #000 0%, #1e1e1e 100%)',
-                          border: '1px solid rgba(255,255,255,0.1)'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 162, 154, 0.4)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'none';
-                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 162, 154, 0.25)';
-                        }}>
-                          <Play size={12} fill="white" /> <span>Mulai Lab</span>
-                        </Link>
+                        quest.difficulty === 'BEGINNER' ? (
+                          <Zap size={26} color={iconColor} fill={iconColor} />
+                        ) : quest.difficulty === 'INTERMEDIATE' ? (
+                          <Compass size={26} color={iconColor} />
+                        ) : (
+                          <Award size={26} color={iconColor} />
+                        )
                       )}
+                    </button>
+
+                    {/* Simple indicator text under node */}
+                    <div style={{
+                      position: 'absolute',
+                      top: isActive ? '80px' : '72px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      whiteSpace: 'nowrap',
+                      fontSize: '12px',
+                      fontWeight: isActive ? '700' : '500',
+                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      textAlign: 'center',
+                      pointerEvents: 'none'
+                    }}>
+                      {quest.title.split(':')[0]}
                     </div>
                   </div>
                 );
               })}
+
+              {/* Floating Node Popover Details (Glassmorphic) */}
+              {selectedQuest && selectedNodePos && (
+                <div className="glass-card" style={{
+                  position: 'absolute',
+                  left: `${selectedNodePos.x}%`,
+                  top: `${selectedNodePos.y - 76}px`,
+                  transform: 'translate(-50%, -100%)',
+                  width: '290px',
+                  zIndex: 10,
+                  padding: '24px',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.85)',
+                  background: 'rgba(252, 252, 251, 0.98)',
+                  borderRadius: '20px',
+                  animation: 'animotion-fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                }}>
+                  {/* Arrow decoration */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '-8px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 0,
+                    height: 0,
+                    borderLeft: '8px solid transparent',
+                    borderRight: '8px solid transparent',
+                    borderTop: '8px solid rgba(252, 252, 251, 0.98)',
+                  }} />
+
+                  {/* Header info */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                    <span style={{
+                      fontSize: '10px',
+                      fontWeight: '800',
+                      letterSpacing: '0.05em',
+                      padding: '3px 8px',
+                      borderRadius: '12px',
+                      background: selectedQuest.difficulty === 'BEGINNER' ? 'rgba(0,162,154,0.1)' : (selectedQuest.difficulty === 'INTERMEDIATE' ? 'rgba(217,119,6,0.1)' : 'rgba(186,26,26,0.1)'),
+                      color: selectedQuest.difficulty === 'BEGINNER' ? 'var(--cyan-neon)' : (selectedQuest.difficulty === 'INTERMEDIATE' ? 'var(--gold)' : 'var(--red-neon)')
+                    }}>
+                      {selectedQuest.difficulty}
+                    </span>
+                    <button 
+                      onClick={() => setSelectedQuest(null)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        padding: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.01em', lineHeight: '1.3' }}>
+                    {selectedQuest.title}
+                  </h3>
+                  
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.5', marginBottom: '16px' }}>
+                    {selectedQuest.description}
+                  </p>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-glass)', paddingTop: '16px' }}>
+                    <div>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block' }}>Reward</span>
+                      <strong style={{ color: 'var(--cyan-neon)', fontSize: '15px', fontFamily: 'var(--font-mono)' }}>+{selectedQuest.xpReward} XP</strong>
+                    </div>
+
+                    {selectedQuest.progress.status === 'COMPLETED' ? (
+                      <span style={{
+                        background: 'rgba(0, 188, 172, 0.08)',
+                        color: '#00bcac',
+                        padding: '10px 18px',
+                        borderRadius: '8px',
+                        fontWeight: '700',
+                        fontSize: '12px',
+                        border: '1px solid rgba(0, 188, 172, 0.2)'
+                      }}>
+                        Selesai
+                      </span>
+                    ) : selectedQuest.orderIndex > 1 && quests.find(q => q.orderIndex === selectedQuest.orderIndex - 1)?.progress.status !== 'COMPLETED' ? (
+                      <span style={{
+                        background: 'rgba(0,0,0,0.02)',
+                        color: 'var(--text-secondary)',
+                        padding: '10px 18px',
+                        borderRadius: '8px',
+                        fontWeight: '700',
+                        fontSize: '12px',
+                        border: '1px solid var(--border-glass)'
+                      }}>
+                        Terkunci
+                      </span>
+                    ) : (
+                      <Link to={`/lab/${selectedQuest.id}`} className="btn-primary" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '10px 18px',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        fontWeight: '700',
+                        background: 'linear-gradient(135deg, #000 0%, #1e1e1e 100%)',
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                      }}>
+                        <Play size={10} fill="white" /> <span>Buka Lab</span>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
 
-          {/* Right Column: Focus & Tips */}
+          {/* RIGHT: Stacked stats and tips sidebar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             
-            {/* Highlighted next active quest */}
-            {nextQuest && (
+            {/* Stats Summary Vertical Stack */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              
+              {/* Stat card 1 */}
               <div className="glass-card" style={{ 
-                border: '1px solid rgba(0, 162, 154, 0.3)', 
-                background: 'rgba(252, 252, 251, 0.85)',
-                borderRadius: '20px',
-                padding: '28px',
-                position: 'relative',
-                overflow: 'hidden'
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                padding: '24px',
+                background: 'rgba(252, 252, 251, 0.8)',
+                borderRadius: '16px',
+                transition: 'transform 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'none';
               }}>
-                {/* Visual accent backdrop glow */}
-                <div style={{
-                  position: 'absolute',
-                  top: '-30px',
-                  right: '-30px',
-                  width: '100px',
-                  height: '100px',
-                  background: 'radial-gradient(circle, rgba(0, 162, 154, 0.15) 0%, rgba(0,0,0,0) 70%)',
-                  zIndex: 0,
-                  pointerEvents: 'none'
-                }} />
-
-                <h3 style={{ fontSize: '12px', color: 'var(--cyan-neon)', fontWeight: '800', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', zIndex: 1, position: 'relative' }}>
-                  <Clock size={16} /> QUEST BERIKUTNYA
-                </h3>
-                <h4 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '10px', letterSpacing: '-0.02em', zIndex: 1, position: 'relative' }}>
-                  {nextQuest.title}
-                </h4>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px', zIndex: 1, position: 'relative' }}>
-                  {nextQuest.description}
-                </p>
-                <Link to={`/lab/${nextQuest.id}`} className="btn-primary" style={{ 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  alignItems: 'center',
-                  width: '100%', 
-                  gap: '8px',
-                  padding: '14px',
-                  borderRadius: '12px',
-                  fontWeight: '700',
-                  fontSize: '14px',
-                  background: 'linear-gradient(135deg, var(--cyan) 0%, #00bcac 100%)',
-                  boxShadow: '0 4px 14px rgba(0, 162, 154, 0.35)',
-                  zIndex: 1,
-                  position: 'relative'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 162, 154, 0.55)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'none';
-                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 162, 154, 0.35)';
-                }}>
-                  <span>Mulai Dikerjakan</span> <ChevronRight size={16} />
-                </Link>
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', letterSpacing: '0.05em' }}>QUEST SELESAI</span>
+                  <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '6px', fontFamily: 'var(--font-heading)' }}>
+                    {completedCount} <span style={{ fontSize: '15px', color: 'var(--text-secondary)', fontWeight: '500' }}>/ {totalCount}</span>
+                  </div>
+                </div>
+                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(0, 162, 154, 0.08)', color: 'var(--cyan-neon)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <BookOpen size={20} />
+                </div>
               </div>
-            )}
+
+              {/* Stat card 2 */}
+              <div className="glass-card" style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                padding: '24px',
+                background: 'rgba(252, 252, 251, 0.8)',
+                borderRadius: '16px',
+                transition: 'transform 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'none';
+              }}>
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', letterSpacing: '0.05em' }}>STREAK BELAJAR</span>
+                  <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '6px', fontFamily: 'var(--font-heading)' }}>
+                    12 <span style={{ fontSize: '15px', color: 'var(--text-secondary)', fontWeight: '500' }}>Hari</span>
+                  </div>
+                </div>
+                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(217, 119, 6, 0.08)', color: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Zap size={20} fill="var(--gold)" />
+                </div>
+              </div>
+
+              {/* Stat card 3 */}
+              <div className="glass-card" style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                padding: '24px',
+                background: 'rgba(252, 252, 251, 0.8)',
+                borderRadius: '16px',
+                transition: 'transform 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'none';
+              }}>
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', letterSpacing: '0.05em' }}>BADGE DIRENTAK</span>
+                  <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '6px', fontFamily: 'var(--font-heading)' }}>
+                    15 <span style={{ fontSize: '15px', color: 'var(--text-secondary)', fontWeight: '500' }}>Lencana</span>
+                  </div>
+                </div>
+                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(124, 58, 237, 0.08)', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Award size={20} />
+                </div>
+              </div>
+
+            </div>
 
             {/* Quick tips list module */}
             <div className="glass-card" style={{ 

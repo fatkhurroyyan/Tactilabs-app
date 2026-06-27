@@ -238,4 +238,18 @@ button {
   animation-play-state: paused;
 }
 
+@keyframes electronFlow {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+.animate-electron-flow {
+  animation: electronFlow 1s linear infinite;
+}
+
+
 
