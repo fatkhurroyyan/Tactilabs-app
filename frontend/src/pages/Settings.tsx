@@ -230,7 +230,21 @@ export const Settings: React.FC = () => {
             className="btn-primary" 
             style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: isTesting ? 0.6 : 1 }}
           >
-            <RefreshCw size={16} className={isTesting ? 'animate-spin' : ''} /> {isTesting ? 'Mendiagnosis...' : 'Jalankan Tes Diagnostik'}
+            {isTesting ? (
+              <>
+                <div className="animotion-flowing-dots" style={{ display: 'inline-flex', gap: '4px', height: 'auto' }}>
+                  <span style={{ width: '6px', height: '6px', background: '#ffffff' }}></span>
+                  <span style={{ width: '6px', height: '6px', background: '#ffffff', animationDelay: '0.4s' }}></span>
+                  <span style={{ width: '6px', height: '6px', background: '#ffffff', animationDelay: '0.8s' }}></span>
+                </div>
+                <span>Mendiagnosis...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw size={16} />
+                <span>Jalankan Tes Diagnostik</span>
+              </>
+            )}
           </button>
         </div>
 

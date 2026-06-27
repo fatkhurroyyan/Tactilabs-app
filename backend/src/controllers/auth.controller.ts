@@ -213,11 +213,12 @@ export const forgotPassword = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(200).json({ message: 'Tautan reset password telah dikirim ke email jika terdaftar.' });
     }
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:4001';
     const resetToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: '1h' });
-    console.log(`[MOCK EMAIL] Reset Link: http://localhost:3001/reset-password/${resetToken}`);
+    console.log(`[MOCK EMAIL] Reset Link: ${clientUrl}/reset-password/${resetToken}`);
     return res.status(200).json({
       message: 'Tautan reset password telah dikirim ke email.',
-      resetLink: `http://localhost:3001/reset-password/${resetToken}`
+      resetLink: `${clientUrl}/reset-password/${resetToken}`
     });
   } catch (error) {
     console.error('Error in forgotPassword:', error);

@@ -160,7 +160,7 @@ export const LandingPage: React.FC = () => {
               }}>
                 Tactilabs menjembatani dunia fisik dan digital secara revolusioner. Hubungkan modul magnetik <strong>TactiBlocks</strong> fisik Anda, dan lihat arus elektron berpendar mengalir seketika di layar dalam visualisasi 3D futuristik.
               </p>
-              <div className="glass-card" style={{ width: '100%', maxWidth: '520px', height: '420px', padding: '12px', background: 'rgba(255, 255, 255, 0.4)', backdropFilter: 'blur(10px)', overflow: 'hidden' }}>
+              <div className="glass-card animotion-glow-pulse" style={{ width: '100%', maxWidth: '520px', height: '420px', padding: '12px', background: 'rgba(255, 255, 255, 0.4)', backdropFilter: 'blur(10px)', overflow: 'hidden' }}>
                 <ModelCanvas />
               </div>
             </div>

@@ -3,6 +3,8 @@ import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import { apiLimiter } from './middleware/rateLimiter';
 
 // Import routes
 import authRoutes from './routes/auth.routes';
@@ -17,8 +19,16 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
+// Use helmet for HTTP security headers
+app.use(helmet({
+  contentSecurityPolicy: false,
+}));
+
+// Apply rate limiter on all API endpoints
+app.use('/api', apiLimiter);
+
 // CORS configuration
-const allowedOrigins = [process.env.CLIENT_URL || 'http://localhost:3001'];
+const allowedOrigins = [process.env.CLIENT_URL || 'http://localhost:4001'];
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
