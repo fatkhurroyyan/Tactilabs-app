@@ -138,6 +138,7 @@ const Navbar: React.FC = () => {
           </>
         ) : (
           <>
+            <Link to="/" style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Beranda</Link>
             <Link to="/features" style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Fitur</Link>
             <Link to="/pricing" style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Harga</Link>
             <Link to="/about" style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Tentang</Link>
