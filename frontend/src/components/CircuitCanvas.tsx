@@ -43,9 +43,11 @@ export const CircuitCanvas: React.FC<CircuitCanvasProps> = ({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.maxPolarAngle = Math.PI / 2 - 0.05; // Prevent camera going below ground
+    controls.maxPolarAngle = Math.PI; // Allow full 360-degree polar rotation
     controls.minDistance = 3;
     controls.maxDistance = 20;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.0;
 
     // 5. Lights Setup
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.15);
