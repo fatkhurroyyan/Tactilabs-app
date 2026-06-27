@@ -126,16 +126,6 @@ io.on('connection', (socket) => {
       let power = 0;
 
       if (state === 'CONNECTED') {
-        // Slowly add components based on time step
-        const rnd = Math.random();
-        if (componentList.length < 3 && rnd > 0.7) {
-          if (!componentList.includes('RESISTOR')) {
-            componentList.push('RESISTOR');
-          } else if (!componentList.includes('LED')) {
-            componentList.push('LED');
-          }
-        }
-
         // Calculate values based on present components and active quest topic
         if (questTopic === 'OHM_LAW') {
           if (componentList.includes('RESISTOR') && componentList.includes('LED')) {
