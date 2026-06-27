@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore';
-import { BookOpen, Clock, Play, BarChart2, Award, Zap, ChevronRight, Compass } from 'lucide-react';
+import { BookOpen, Clock, Play, BarChart2, Award, Zap, ChevronRight, Compass, Lightbulb, RefreshCw } from 'lucide-react';
 
 interface Quest {
   id: string;
@@ -101,7 +101,7 @@ export const Dashboard: React.FC = () => {
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px', position: 'relative', zIndex: 1 }}>
         
         {/* Header Profile Summary (Asymmetric Glassmorphic Widget) */}
-        <div className="glass-card animotion-glow-pulse" style={{ 
+        <div className="glass-card" style={{ 
           display: 'grid', 
           gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1.2fr)', 
           gap: '32px', 
@@ -117,17 +117,6 @@ export const Dashboard: React.FC = () => {
           {/* Profile details */}
           <div style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ position: 'relative' }}>
-              {/* Outer pulsing ring */}
-              <div style={{
-                position: 'absolute',
-                top: '-4px',
-                left: '-4px',
-                right: '-4px',
-                bottom: '-4px',
-                borderRadius: '50%',
-                border: '2px solid rgba(0, 162, 154, 0.3)',
-                animation: 'animotion-pulse 2s infinite ease-in-out'
-              }} />
               <div style={{
                 width: '88px',
                 height: '88px',
@@ -433,7 +422,7 @@ export const Dashboard: React.FC = () => {
             
             {/* Highlighted next active quest */}
             {nextQuest && (
-              <div className="glass-card animotion-glow-pulse" style={{ 
+              <div className="glass-card" style={{ 
                 border: '1px solid rgba(0, 162, 154, 0.3)', 
                 background: 'rgba(252, 252, 251, 0.85)',
                 borderRadius: '20px',
@@ -500,16 +489,16 @@ export const Dashboard: React.FC = () => {
                 <BarChart2 size={18} color="var(--cyan)" /> Tips Praktikum Phygital
               </h3>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '13px', color: 'var(--text-secondary)', padding: 0 }}>
-                <li style={{ display: 'flex', gap: '10px', lineHeight: '1.5' }}>
-                  <span style={{ color: 'var(--cyan-neon)', fontWeight: 'bold' }}>🔌</span>
+                <li style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', lineHeight: '1.5' }}>
+                  <Zap size={16} color="var(--cyan-neon)" style={{ flexShrink: 0, marginTop: '2px' }} />
                   <span>Hubungkan catu daya baterai 5V paling akhir untuk menjaga keamanan sirkuit dari hubungan pendek.</span>
                 </li>
-                <li style={{ display: 'flex', gap: '10px', lineHeight: '1.5' }}>
-                  <span style={{ color: 'var(--gold)', fontWeight: 'bold' }}>💡</span>
+                <li style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', lineHeight: '1.5' }}>
+                  <Lightbulb size={16} color="var(--gold)" style={{ flexShrink: 0, marginTop: '2px' }} />
                   <span>Resistor diletakkan sebelum LED untuk membatasi laju elektron dan menjaga LED tidak terbakar.</span>
                 </li>
-                <li style={{ display: 'flex', gap: '10px', lineHeight: '1.5' }}>
-                  <span style={{ color: '#7c3aed', fontWeight: 'bold' }}>🔄</span>
+                <li style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', lineHeight: '1.5' }}>
+                  <RefreshCw size={16} color="#7c3aed" style={{ flexShrink: 0, marginTop: '2px' }} />
                   <span>Gunakan filter pencarian quest jika ingin mengeksplor topik tertentu secara fokus.</span>
                 </li>
               </ul>
