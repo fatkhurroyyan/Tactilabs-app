@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore';
 import { Zap, AlertTriangle } from 'lucide-react';
@@ -7,11 +7,28 @@ export const Register: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [institutions, setInstitutions] = useState<{ id: string; name: string }[]>([]);
+  const [selectedInstitutionId, setSelectedInstitutionId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const loginAction = useAppStore(state => state.login);
+
+  useEffect(() => {
+    const fetchInstitutions = async () => {
+      try {
+        const response = await fetch('http://localhost:4002/api/auth/institutions');
+        const data = await response.json();
+        if (response.ok) {
+          setInstitutions(data.institutions || []);
+        }
+      } catch (err) {
+        console.error('Gagal mengambil daftar institusi:', err);
+      }
+    };
+    fetchInstitutions();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +45,12 @@ export const Register: React.FC = () => {
       const response = await fetch('http://localhost:4002/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ 
+          name, 
+          email, 
+          password, 
+          institutionId: selectedInstitutionId || null 
+        }),
       });
 
       const data = await response.json();
@@ -56,16 +78,7 @@ export const Register: React.FC = () => {
     }}>
       <div className="glass-card" style={{ width: '100%', maxWidth: '420px' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{
-            display: 'inline-flex',
-            padding: '12px',
-            borderRadius: '50%',
-            background: 'rgba(0, 162, 154, 0.1)',
-            color: 'var(--cyan-neon)',
-            marginBottom: '16px'
-          }}>
-            <Zap size={28} />
-          </div>
+          <img src="/logo_tactilabs_cropped.png" alt="TactiLabs Logo" style={{ height: '48px', objectFit: 'contain', marginBottom: '16px' }} />
           <h2 style={{ fontSize: '28px', fontWeight: 'bold' }}>Daftar Akun</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '6px' }}>
             Mulai petualangan praktikum phygital STEM Anda
@@ -122,6 +135,19 @@ export const Register: React.FC = () => {
               placeholder="Minimal 8 karakter"
               required
             />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500' }}>Institusi B2B (Optional)</label>
+            <select
+              value={selectedInstitutionId}
+              onChange={(e) => setSelectedInstitutionId(e.target.value)}
+            >
+              <option value="">Belajar Mandiri (Non-B2B)</option>
+              {institutions.map(inst => (
+                <option key={inst.id} value={inst.id}>{inst.name}</option>
+              ))}
+            </select>
           </div>
 
           <button

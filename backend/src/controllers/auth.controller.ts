@@ -47,6 +47,20 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Email sudah terdaftar. Silakan gunakan email lain atau login.' });
     }
 
+    if (institutionId) {
+      const inst = await prisma.institution.findUnique({
+        where: { id: institutionId }
+      });
+      if (inst) {
+        const activeCount = await prisma.user.count({
+          where: { institutionId, role: 'STUDENT' }
+        });
+        if (activeCount >= inst.maxStudents) {
+          return res.status(400).json({ message: `Kuota B2B untuk ${inst.name} (${inst.maxStudents} siswa) telah terpenuhi. Silakan hubungi admin Anda.` });
+        }
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
@@ -189,6 +203,50 @@ export const refresh = async (req: Request, res: Response) => {
   }
 };
 
+export const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: 'Email wajib diisi' });
+  }
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(200).json({ message: 'Tautan reset password telah dikirim ke email jika terdaftar.' });
+    }
+    const resetToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: '1h' });
+    console.log(`[MOCK EMAIL] Reset Link: http://localhost:3001/reset-password/${resetToken}`);
+    return res.status(200).json({
+      message: 'Tautan reset password telah dikirim ke email.',
+      resetLink: `http://localhost:3001/reset-password/${resetToken}`
+    });
+  } catch (error) {
+    console.error('Error in forgotPassword:', error);
+    return res.status(500).json({ message: 'Terjadi kesalahan pada server' });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { token, password } = req.body;
+  if (!token || !password) {
+    return res.status(400).json({ message: 'Token dan password baru wajib diisi' });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ message: 'Password minimal harus 8 karakter' });
+  }
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { email: string };
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await prisma.user.update({
+      where: { email: decoded.email },
+      data: { password: hashedPassword }
+    });
+    return res.status(200).json({ message: 'Password berhasil diubah. Silakan login kembali.' });
+  } catch (error) {
+    console.error('Error in resetPassword:', error);
+    return res.status(400).json({ message: 'Token reset tidak valid atau telah kedaluwarsa' });
+  }
+};
+
 export const logout = async (req: Request, res: Response) => {
   const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
@@ -206,3 +264,20 @@ export const logout = async (req: Request, res: Response) => {
   res.clearCookie('refreshToken');
   return res.status(200).json({ message: 'Logout berhasil' });
 };
+
+export const getPublicInstitutions = async (req: Request, res: Response) => {
+  try {
+    const institutions = await prisma.institution.findMany({
+      select: {
+        id: true,
+        name: true
+      }
+    });
+    return res.status(200).json({ institutions });
+  } catch (error) {
+    console.error('Error getting public institutions:', error);
+    return res.status(500).json({ message: 'Gagal mengambil daftar institusi' });
+  }
+};
+
+

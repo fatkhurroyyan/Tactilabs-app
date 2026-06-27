@@ -49,16 +49,7 @@ export const Login: React.FC = () => {
     }}>
       <div className="glass-card" style={{ width: '100%', maxWidth: '420px' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{
-            display: 'inline-flex',
-            padding: '12px',
-            borderRadius: '50%',
-            background: 'rgba(0, 162, 154, 0.1)',
-            color: 'var(--cyan-neon)',
-            marginBottom: '16px'
-          }}>
-            <Zap size={28} />
-          </div>
+          <img src="/logo_tactilabs_cropped.png" alt="TactiLabs Logo" style={{ height: '48px', objectFit: 'contain', marginBottom: '16px' }} />
           <h2 style={{ fontSize: '28px', fontWeight: 'bold' }}>Masuk TactiApp</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '6px' }}>
             Hubungkan akun belajar digital Anda

@@ -164,12 +164,13 @@ export const Quests: React.FC = () => {
                 ) : isLocked ? (
                   <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Terkunci</span>
                 ) : (
-                  <Link to={`/lab/${quest.id}`} className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Link to={`/quests/${quest.id}`} className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Play size={12} fill="white" /> Mulai
                   </Link>
                 )}
               </div>
             </div>
+
           );
         })}
       </div>

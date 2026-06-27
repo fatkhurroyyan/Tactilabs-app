@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Zap, Cpu, Play, CheckCircle2, Sliders, Sparkles } from 'lucide-react';
+import { ModelCanvas } from '../components/ModelCanvas';
+
 
 export const LandingPage: React.FC = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
@@ -147,16 +149,20 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', paddingTop: '16px', gap: '24px' }}>
               <p style={{
                 fontSize: '18px',
                 lineHeight: '1.6',
                 color: '#6B6B6B',
                 maxWidth: '440px',
-                textAlign: 'left'
+                textAlign: 'left',
+                margin: 0
               }}>
                 Tactilabs menjembatani dunia fisik dan digital secara revolusioner. Hubungkan modul magnetik <strong>TactiBlocks</strong> fisik Anda, dan lihat arus elektron berpendar mengalir seketika di layar dalam visualisasi 3D futuristik.
               </p>
+              <div className="glass-card" style={{ width: '100%', maxWidth: '520px', height: '420px', padding: '12px', background: 'rgba(255, 255, 255, 0.4)', backdropFilter: 'blur(10px)', overflow: 'hidden' }}>
+                <ModelCanvas />
+              </div>
             </div>
           </div>
         </section>
@@ -801,100 +807,6 @@ export const LandingPage: React.FC = () => {
 
           </div>
         </section>
-
-        {/* PRICING SECTION - Exactly matching user image template */}
-        <section id="harga" style={{ padding: '100px 24px', backgroundColor: '#F3F2EF', borderTop: '1px solid #E7E7E4', borderBottom: '1px solid #E7E7E4', marginBottom: '100px' }}>
-          <div style={{ maxWidth: '1280px', margin: '0 auto', textAlign: 'center' }}>
-            <h2 style={{ fontSize: '48px', fontWeight: '800', color: '#111111', marginBottom: '50px', letterSpacing: '-0.03em' }}>Paket Pembelajaran & Lisensi</h2>
-            
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '32px', maxWidth: '840px', margin: '0 auto', alignItems: 'stretch', justifyContent: 'center' }}>
-              
-              {/* Package B2C - Siswa Mandiri */}
-              <div style={{ 
-                flex: '1 1 350px', 
-                backgroundColor: '#FCFCFB', 
-                border: '1px solid #E7E7E4', 
-                borderRadius: '16px', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                justifyContent: 'space-between', 
-                padding: '36px 28px', 
-                textAlign: 'left' 
-              }}>
-                <div>
-                  <h3 style={{ fontSize: '20px', color: '#111111', fontWeight: 'bold', marginBottom: '6px' }}>Siswa Mandiri</h3>
-                  <div style={{ fontSize: '40px', fontWeight: '800', color: '#000000', margin: '14px 0' }}>Gratis</div>
-                  <p style={{ color: '#6B6B6B', marginBottom: '24px', fontSize: '14px', lineHeight: '1.5' }}>Belajar mandiri dengan simulator virtual sirkuit tanpa modul perangkat keras fisik.</p>
-                  <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px', fontSize: '13px', color: '#6B6B6B', padding: 0 }}>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={14} color="#000000" /> Akses quest tingkat Beginner</li>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={14} color="#000000" /> Visualisasi 3D mode simulasi virtual</li>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={14} color="#000000" /> Peringkat global papan skor</li>
-                  </ul>
-                </div>
-                <Link to="/register" style={{ 
-                  width: '100%', 
-                  textAlign: 'center', 
-                  border: '1px solid #E7E7E4', 
-                  padding: '12px', 
-                  borderRadius: '8px', 
-                  fontWeight: 600, 
-                  color: '#6B6B6B',
-                  backgroundColor: '#FCFCFB'
-                }} className="hover:bg-zinc-50 transition-colors">Daftar Akun</Link>
-              </div>
-
-              {/* Package B2B - Lisensi Institusi */}
-              <div style={{ 
-                flex: '1 1 350px', 
-                backgroundColor: '#FCFCFB', 
-                border: '2px solid #000000', 
-                borderRadius: '16px', 
-                position: 'relative', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                justifyContent: 'space-between',
-                padding: '44px 32px',
-                textAlign: 'left',
-                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.03)'
-              }}>
-                <div style={{ 
-                  position: 'absolute', 
-                  top: '-14px', 
-                  right: '24px', 
-                  background: '#000000', 
-                  color: 'white', 
-                  padding: '4px 12px', 
-                  borderRadius: '20px', 
-                  fontSize: '11px', 
-                  fontWeight: 'bold', 
-                  letterSpacing: '0.05em' 
-                }}>REKOMENDASI KEMITRAAN</div>
-                <div>
-                  <h3 style={{ fontSize: '20px', color: '#111111', fontWeight: 'bold', marginBottom: '6px' }}>Lisensi Institusi</h3>
-                  <div style={{ fontSize: '32px', fontWeight: '800', color: '#111111', margin: '14px 0' }}>Hubungi Mitra</div>
-                  <p style={{ color: '#6B6B6B', marginBottom: '24px', fontSize: '14px', lineHeight: '1.5' }}>Lisensi penuh sekolah/campusr termasuk kit fisik TactiBlocks & Dashboard Analitik LMS Pendidik.</p>
-                  <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px', fontSize: '13px', color: '#6B6B6B', padding: 0 }}>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={14} color="#000000" /> Semua modul & quest (Unlocking Premium)</li>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={14} color="#000000" /> Sinkronisasi data sensor perangkat keras fisik</li>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={14} color="#000000" /> Portal Analitik Pendidik & Integrasi LMS</li>
-                  </ul>
-                </div>
-                <a href="#contact" style={{ 
-                  width: '100%', 
-                  textAlign: 'center', 
-                  background: '#000000', 
-                  color: 'white', 
-                  padding: '12px', 
-                  borderRadius: '8px', 
-                  fontWeight: 600,
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
-                }} className="hover:opacity-90 transition-opacity">Ajukan Kerja Sama</a>
-              </div>
-
-            </div>
-          </div>
-        </section>
-
         {/* CSR PARTNERSHIP FORM */}
         <section id="contact" style={{ padding: '0 24px', maxWidth: '1280px', margin: '0 auto 100px', width: '100%' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px', alignItems: 'center' }}>
