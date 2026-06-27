@@ -341,7 +341,7 @@ export const LandingPage: React.FC = () => {
         {/* LOGO MARQUEE */}
         <section style={{ width: '100%', overflow: 'hidden', marginBottom: '100px', padding: '16px 0' }}>
           <div style={{ display: 'flex', whiteSpace: 'nowrap', overflow: 'hidden' }} className="group">
-            <div className="animate-marquee group-hover:pause-marquee" style={{ display: 'flex', gap: '96px', alignItems: 'center' }}>
+            <div className="animate-marquee group-hover:pause-marquee" style={{ display: 'flex', gap: '96px', alignItems: 'center', flexShrink: 0, minWidth: '100%', justifyContent: 'space-around' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 'bold', color: 'rgba(0,0,0,0.1)', textTransform: 'uppercase', fontStyle: 'italic' }}><Cpu size={24} /> Velocity</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 'bold', color: 'rgba(0,0,0,0.1)', textTransform: 'uppercase', fontStyle: 'italic' }}><Zap size={24} /> Nexus</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 'bold', color: 'rgba(0,0,0,0.1)', textTransform: 'uppercase', fontStyle: 'italic' }}><Sparkles size={24} /> Lumina</div>
@@ -349,7 +349,7 @@ export const LandingPage: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 'bold', color: 'rgba(0,0,0,0.1)', textTransform: 'uppercase', fontStyle: 'italic' }}><Cpu size={24} /> Stack</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 'bold', color: 'rgba(0,0,0,0.1)', textTransform: 'uppercase', fontStyle: 'italic' }}><Zap size={24} /> Scalar</div>
             </div>
-            <div aria-hidden="true" className="animate-marquee group-hover:pause-marquee" style={{ display: 'flex', gap: '96px', alignItems: 'center' }}>
+            <div aria-hidden="true" className="animate-marquee group-hover:pause-marquee" style={{ display: 'flex', gap: '96px', alignItems: 'center', flexShrink: 0, minWidth: '100%', justifyContent: 'space-around' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 'bold', color: 'rgba(0,0,0,0.1)', textTransform: 'uppercase', fontStyle: 'italic' }}><Cpu size={24} /> Velocity</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 'bold', color: 'rgba(0,0,0,0.1)', textTransform: 'uppercase', fontStyle: 'italic' }}><Zap size={24} /> Nexus</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 'bold', color: 'rgba(0,0,0,0.1)', textTransform: 'uppercase', fontStyle: 'italic' }}><Sparkles size={24} /> Lumina</div>
