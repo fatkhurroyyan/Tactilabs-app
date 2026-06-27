@@ -5,6 +5,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import { apiLimiter } from './middleware/rateLimiter';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 // Import routes
 import authRoutes from './routes/auth.routes';
@@ -96,6 +99,21 @@ io.on('connection', (socket) => {
       clearInterval(activeSimulations.get(userId)!);
     }
 
+    let questTopic = 'SANDBOX';
+
+    if (questId) {
+      prisma.quest.findUnique({
+        where: { id: questId }
+      }).then((q: any) => {
+        if (q) {
+          questTopic = q.topic;
+          console.log(`[Simulator] Sirkuit dimuat untuk Quest Topic: ${questTopic}`);
+        }
+      }).catch((err: any) => {
+        console.error('Error fetching quest details for simulator:', err);
+      });
+    }
+
     // Start ESP32 Mock Data Streamer
     let componentList = ['BATTERY'];
     let state = 'CONNECTED'; // CONNECTED, DISCONNECTED, SHORT_CIRCUIT
@@ -118,22 +136,73 @@ io.on('connection', (socket) => {
           }
         }
 
-        // Calculate values based on present components
-        if (componentList.includes('RESISTOR') && componentList.includes('LED')) {
-          voltage = 4.85 + Math.random() * 0.15; // ~5V
-          current = 18.0 + Math.random() * 1.5; // ~19mA
-          power = (voltage * current) / 1000; // in W
-          isComplete = true; // Complete Ohm's law condition
-        } else if (componentList.includes('RESISTOR')) {
-          voltage = 4.95 + Math.random() * 0.05;
-          current = 0.5 + Math.random() * 0.1; // Open circuit or minimal current leakage
-          power = (voltage * current) / 1000;
-          isComplete = false;
+        // Calculate values based on present components and active quest topic
+        if (questTopic === 'OHM_LAW') {
+          if (componentList.includes('RESISTOR') && componentList.includes('LED')) {
+            voltage = 3.2 + Math.random() * 0.3; // matches 2.0 - 4.5 V drop across LED
+            current = 19.0 + Math.random() * 1.5; // ~20 mA (matches 10 - 30 mA)
+            power = (voltage * current) / 1000;
+            isComplete = true;
+          } else if (componentList.includes('RESISTOR')) {
+            voltage = 4.95 + Math.random() * 0.05;
+            current = 0.5 + Math.random() * 0.1;
+            power = (voltage * current) / 1000;
+            isComplete = false;
+          } else {
+            voltage = 5.0;
+            current = 0;
+            power = 0;
+            isComplete = false;
+          }
+        } else if (questTopic === 'VOLTAGE') {
+          // Voltage divider simulation
+          if (componentList.includes('RESISTOR')) {
+            voltage = 2.45 + Math.random() * 0.1; // ~2.5 V (matches 2.5 V divider output)
+            current = 5.0 + Math.random() * 0.5;
+            power = (voltage * current) / 1000;
+            isComplete = true;
+          } else {
+            voltage = 5.0;
+            current = 0;
+            power = 0;
+            isComplete = false;
+          }
+        } else if (questTopic === 'LOGIC_GATE') {
+          // AND logic gate simulation
+          if (componentList.includes('SWITCH') && componentList.includes('LED')) {
+            voltage = 3.3 + Math.random() * 0.3;
+            current = 15.0 + Math.random() * 1.0;
+            power = (voltage * current) / 1000;
+            isComplete = true;
+          } else if (componentList.includes('SWITCH')) {
+            voltage = 4.9;
+            current = 0.1;
+            power = 0;
+            isComplete = false;
+          } else {
+            voltage = 5.0;
+            current = 0;
+            power = 0;
+            isComplete = false;
+          }
         } else {
-          voltage = 5.0;
-          current = 0;
-          power = 0;
-          isComplete = false;
+          // Sandbox or general fallback
+          if (componentList.includes('RESISTOR') && componentList.includes('LED')) {
+            voltage = 3.3 + Math.random() * 0.2;
+            current = 20.0 + Math.random() * 1.0;
+            power = (voltage * current) / 1000;
+            isComplete = true;
+          } else if (componentList.includes('RESISTOR')) {
+            voltage = 4.9;
+            current = 0.5;
+            power = 0;
+            isComplete = false;
+          } else {
+            voltage = 5.0;
+            current = 0;
+            power = 0;
+            isComplete = false;
+          }
         }
       } else if (state === 'SHORT_CIRCUIT') {
         voltage = 1.2 + Math.random() * 0.3;

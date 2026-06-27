@@ -19,6 +19,8 @@ interface QuestDetail {
       maxCurrentMA?: number;
       minVoltageV?: number;
       maxVoltageV?: number;
+      targetVoltageAtNodeV?: number;
+      toleranceV?: number;
     };
   };
   instructions: string[];
@@ -89,6 +91,14 @@ export const Lab: React.FC = () => {
     if (validation.maxCurrentMA !== undefined && current > validation.maxCurrentMA) statsMatch = false;
     if (validation.minVoltageV !== undefined && voltage < validation.minVoltageV) statsMatch = false;
     if (validation.maxVoltageV !== undefined && voltage > validation.maxVoltageV) statsMatch = false;
+
+    // Check voltage divider specific parameter
+    if (validation.targetVoltageAtNodeV !== undefined) {
+      const tolerance = validation.toleranceV || 0.2;
+      if (Math.abs(voltage - validation.targetVoltageAtNodeV) > tolerance) {
+        statsMatch = false;
+      }
+    }
 
     if (componentsMatch && statsMatch && sensorData.isComplete) {
       setSuccessChecked(true);
@@ -304,15 +314,51 @@ export const Lab: React.FC = () => {
             <div style={{ borderLeft: '1px solid var(--border-glass)', paddingLeft: '32px' }}>
               <h2 style={{ fontSize: '18px', color: 'white', marginBottom: '12px' }}>Kriteria Keberhasilan</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: sensorData?.components.includes('RESISTOR') ? '#00bcac' : 'var(--text-secondary)' }}>
-                  <CheckCircle2 size={16} /> Resistor Terpasang
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: sensorData?.components.includes('LED') ? '#00bcac' : 'var(--text-secondary)' }}>
-                  <CheckCircle2 size={16} /> LED Terpasang
-                </div>
+                {Array.from(new Set(quest.circuitConfig.components)).map((comp, idx) => {
+                  const hasComp = sensorData?.components.includes(comp);
+                  return (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: hasComp ? '#00bcac' : 'var(--text-secondary)' }}>
+                      <CheckCircle2 size={16} /> Modul {comp.charAt(0) + comp.slice(1).toLowerCase()} Terpasang
+                    </div>
+                  );
+                })}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: sensorData?.isComplete ? '#00bcac' : 'var(--text-secondary)' }}>
                   <CheckCircle2 size={16} /> Rangkaian Tertutup & Menyala
                 </div>
+                
+                {/* Specific electrical parameters checks */}
+                {quest.circuitConfig.validation.minCurrentMA !== undefined && (
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    color: sensorData && sensorData.current >= quest.circuitConfig.validation.minCurrentMA && (quest.circuitConfig.validation.maxCurrentMA === undefined || sensorData.current <= quest.circuitConfig.validation.maxCurrentMA) ? '#00bcac' : 'var(--text-secondary)' 
+                  }}>
+                    <CheckCircle2 size={16} /> Arus Rangkaian ({quest.circuitConfig.validation.minCurrentMA} - {quest.circuitConfig.validation.maxCurrentMA} mA)
+                  </div>
+                )}
+
+                {quest.circuitConfig.validation.minVoltageV !== undefined && (
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    color: sensorData && sensorData.voltage >= quest.circuitConfig.validation.minVoltageV && (quest.circuitConfig.validation.maxVoltageV === undefined || sensorData.voltage <= quest.circuitConfig.validation.maxVoltageV) ? '#00bcac' : 'var(--text-secondary)' 
+                  }}>
+                    <CheckCircle2 size={16} /> Tegangan Rangkaian ({quest.circuitConfig.validation.minVoltageV} - {quest.circuitConfig.validation.maxVoltageV} V)
+                  </div>
+                )}
+
+                {quest.circuitConfig.validation.targetVoltageAtNodeV !== undefined && (
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    color: sensorData && Math.abs(sensorData.voltage - quest.circuitConfig.validation.targetVoltageAtNodeV) <= (quest.circuitConfig.validation.toleranceV || 0.2) ? '#00bcac' : 'var(--text-secondary)' 
+                  }}>
+                    <CheckCircle2 size={16} /> Tegangan Titik Bagi ({quest.circuitConfig.validation.targetVoltageAtNodeV} V ± {quest.circuitConfig.validation.toleranceV || 0.2} V)
+                  </div>
+                )}
               </div>
 
               {quest.hint && (
